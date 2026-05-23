@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenBot — 开源通用机器人开发平台</title>
+<meta name="description" content="从零制作具身机器人：轮式原型→人形→多模态智能体，全程开源">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+
+<style>
+:root {
+  --bg: #0d1117;
+  --card-bg: #161b22;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --accent-green: #3fb950;
+  --accent-orange: #d29922;
+  --accent-red: #f85149;
+  --accent-purple: #bc8cff;
+  --text: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans CJK SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Navigation */
+nav {
+  position: sticky; top: 0;
+  background: rgba(13,17,23,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  z-index: 100;
+}
+nav .inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center;
+  height: 56px; gap: 24px;
+}
+nav .logo { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.3px; }
+nav .logo span { color: var(--accent); }
+nav a { color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; }
+nav a:hover { color: var(--text); }
+
+/* Hero */
+.hero {
+  text-align: center; padding: 80px 24px 60px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(88,166,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero h1 {
+  font-size: 3rem; font-weight: 800; letter-spacing: -1px;
+  margin-bottom: 12px;
+}
+.hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero .subtitle { color: var(--text-secondary); font-size: 1.125rem; max-width: 600px; margin: 0 auto 28px; }
+.badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.badges img { height: 28px; }
+
+/* Sections */
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+section { padding: 60px 0; }
+
+.section-title {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 28px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* Roadmap */
+.roadmap {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  margin-top: 8px;
+}
+.roadmap-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px;
+  transition: all 0.25s ease; position: relative;
+}
+.roadmap-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.roadmap-card .phase-tag {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;
+  font-weight: 600; margin-bottom: 8px;
+}
+.roadmap-card:nth-child(1) .phase-tag { color: var(--accent-green); }
+.roadmap-card:nth-child(2) .phase-tag { color: var(--accent-orange); }
+.roadmap-card:nth-child(3) .phase-tag { color: var(--accent-purple); }
+.roadmap-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+.roadmap-card p { color: var(--text-secondary); font-size: 0.875rem; }
+.roadmap-card .arrow {
+  position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 1.5rem;
+}
+.roadmap-card:last-child .arrow { display: none; }
+
+/* Architecture diagram */
+.arch {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 32px; font-family: var(--font-mono);
+  font-size: 0.8125rem; line-height: 1.8;
+  overflow-x: auto;
+}
+.arch .comment { color: var(--text-muted); }
+.arch .layer-ai { color: var(--accent-purple); }
+.arch .layer-compute { color: var(--accent); }
+.arch .layer-control { color: var(--accent-green); }
+.arch .layer-actuator { color: var(--accent-orange); }
+.arch .connector { color: var(--text-muted); }
+
+/* Specs table */
+table.specs { width: 100%; border-collapse: collapse; }
+table.specs th, table.specs td {
+  padding: 12px 16px; text-align: left;
+  border-bottom: 1px solid var(--border); font-size: 0.9rem;
+}
+table.specs th { font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+table.specs tr:hover { background: rgba(255,255,255,0.02); }
+table.specs .tag {
+  display: inline-block; padding: 2px 10px; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.tag-ros2 { background: rgba(34,49,62,0.5); color: var(--accent); }
+.tag-mcu { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+.tag-ai { background: rgba(188,140,255,0.15); color: var(--accent-purple); }
+.tag-hardware { background: rgba(210,153,34,0.15); color: var(--accent-orange); }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px; text-align: center;
+}
+.stat-card .number { font-size: 1.75rem; font-weight: 800; color: var(--accent); }
+.stat-card .label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+
+/* Project structure */
+.structure {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px 32px;
+  font-family: var(--font-mono); font-size: 0.85rem; line-height: 2;
+}
+.structure .dir { color: var(--accent); }
+.structure .file { color: var(--text-secondary); }
+.structure .comment { color: var(--text-muted); font-style: italic; }
+
+/* Links */
+.link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.link-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+  text-decoration: none; color: var(--text);
+  transition: border-color 0.2s;
+}
+.link-card:hover { border-color: var(--accent); }
+.link-card .emoji { font-size: 1.5rem; }
+.link-card .link-title { font-weight: 600; font-size: 0.9rem; }
+.link-card .link-desc { font-size: 0.8rem; color: var(--text-secondary); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 24px; margin-top: 20px;
+  text-align: center; color: var(--text-muted); font-size: 0.85rem;
+}
+footer a { color: var(--text-secondary); text-decoration: none; }
+footer a:hover { color: var(--accent); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .roadmap { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .link-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <div class="logo"><span>Gen</span>Bot</div>
+    <a href="#roadmap">路线</a>
+    <a href="#arch">架构</a>
+    <a href="#specs">选型</a>
+    <a href="#structure">项目</a>
+    <a href="https://github.com/zhangshuaiqing/robot" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>从零制作 <span>具身机器人</span></h1>
+  <p class="subtitle">一个开源的通用机器人开发平台。从轮式底盘到多模态智能体，全程开源分享。</p>
+  <div class="badges">
+    <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT">
+    <img src="https://img.shields.io/badge/ROS2-Humble-22314E" alt="ROS2">
+    <img src="https://img.shields.io/badge/Status-Phase_0-blueviolet" alt="Phase">
+    <img src="https://img.shields.io/github/last-commit/zhangshuaiqing/robot" alt="Last commit">
+    <img src="https://img.shields.io/github/stars/zhangshuaiqing/robot?style=social" alt="Stars">
+  </div>
+</section>
+
+<div class="container">
+
+<section id="roadmap">
+  <h2 class="section-title">🗺️ 路线图</h2>
+  <div class="roadmap">
+    <div class="roadmap-card">
+      <div class="phase-tag">Phase 0-3 · 当前</div>
+      <h3>🛞 轮式原型</h3>
+      <p>4轮差速底盘 · ROS2 Nav2 SLAM · 视觉AI · LLM Agent</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="roadmap-card">
+      <div class="phase-tag">Phase 4-6</div>
+      <h3>🧍 人形机器人</h3>
+      <p>关节控制 · 双足平衡 · VLM感知 · 上层AI迁移</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="roadmap-card">
+      <div class="phase-tag">Phase 7+</div>
+      <h3>🧠 多模态智能体</h3>
+      <p>视触力听觉融合 · 多形态协作 · 统一认知架构</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">📊 项目状态</h2>
+  <div class="stats">
+    <div class="stat-card"><div class="number">4</div><div class="label">文档</div></div>
+    <div class="stat-card"><div class="number">6</div><div class="label">已定选型</div></div>
+    <div class="stat-card"><div class="number">Phase 0</div><div class="label">当前阶段</div></div>
+    <div class="stat-card"><div class="number">Gazebo</div><div class="label">仿真平台</div></div>
+  </div>
+</section>
+
+<section id="arch">
+  <h2 class="section-title">🏗️ 技术架构</h2>
+  <div class="arch">
+<span class="comment">┌─────────────────────────────────────────────┐</span><br>
+<span class="comment">│</span>  <span class="layer-ai">🤖 AI / 云端推理层</span>                         <span class="comment">│</span><br>
+<span class="comment">│</span>  <span class="layer-ai">LLM Agent · YOLO视觉 · 任务规划 · 语音交互</span>  <span class="comment">│</span><br>
+<span class="comment">└──────────────┬──────────────────────────────┘</span><br>
+<span class="connector">               │ WiFi / 4G</span><br>
+<span class="comment">┌──────────────┴──────────────────────────────┐</span><br>
+<span class="comment">│</span>  <span class="layer-compute">💻 核心计算 (Jetson Orin Nano 8GB)</span>        <span class="comment">│</span><br>
+<span class="comment">│</span>  <span class="layer-compute">ROS2 Humble · SLAM · Nav2 · 多模态感知</span>     <span class="comment">│</span><br>
+<span class="comment">└──────────────┬──────────────────────────────┘</span><br>
+<span class="connector">               │ UART / USB Serial</span><br>
+<span class="comment">┌──────────────┴──────────────────────────────┐</span><br>
+<span class="comment">│</span>  <span class="layer-control">⚡ 实时控制 (ESP32)</span>                       <span class="comment">│</span><br>
+<span class="comment">│</span>  <span class="layer-control">电机PID · 编码器 · IMU融合 · 安全保护</span>       <span class="comment">│</span><br>
+<span class="comment">└──────────────┬──────────────────────────────┘</span><br>
+<span class="connector">               │ PWM / 编码器信号</span><br>
+<span class="comment">┌──────────────┴──────────────────────────────┐</span><br>
+<span class="comment">│</span>  <span class="layer-actuator">🔧 执行器与传感器</span>                          <span class="comment">│</span><br>
+<span class="comment">│</span>  <span class="layer-actuator">JGA25-371 · RPLIDAR · Realsense · MPU6050</span>  <span class="comment">│</span><br>
+<span class="comment">└─────────────────────────────────────────────┘</span>
+  </div>
+</section>
+
+<section id="specs">
+  <h2 class="section-title">🔬 硬件选型 (v1.0)</h2>
+  <table class="specs">
+    <tr><th>层级</th><th>选型</th><th>标签</th><th>备注</th></tr>
+    <tr>
+      <td>主控计算</td>
+      <td>NVIDIA Jetson Orin Nano 8GB</td>
+      <td><span class="tag tag-ai">AI</span></td>
+      <td>视觉推理 · ROS2</td>
+    </tr>
+    <tr>
+      <td>底层控制</td>
+      <td>ESP32-DevKitC V4</td>
+      <td><span class="tag tag-mcu">MCU</span></td>
+      <td>Arduino框架入门</td>
+    </tr>
+    <tr>
+      <td>驱动电机</td>
+      <td>JGA25-371 编码电机 ×2</td>
+      <td><span class="tag tag-hardware">HW</span></td>
+      <td>直流有刷+AB相编码器</td>
+    </tr>
+    <tr>
+      <td>电机驱动</td>
+      <td>TB6612FNG 双路驱动</td>
+      <td><span class="tag tag-hardware">HW</span></td>
+      <td>MOSFET高效 · 2A</td>
+    </tr>
+    <tr>
+      <td>底盘</td>
+      <td>4轮差速两驱</td>
+      <td><span class="tag tag-ros2">ROS2</span></td>
+      <td>后轮驱动+前万向轮</td>
+    </tr>
+    <tr>
+      <td>激光雷达</td>
+      <td>RPLIDAR A1</td>
+      <td><span class="tag tag-ros2">ROS2</span></td>
+      <td>2D SLAM建图</td>
+    </tr>
+    <tr>
+      <td>深度相机</td>
+      <td>Intel Realsense D435</td>
+      <td><span class="tag tag-ai">AI</span></td>
+      <td>避障 · 目标检测</td>
+    </tr>
+    <tr>
+      <td>IMU</td>
+      <td>MPU6050 (GY-521)</td>
+      <td><span class="tag tag-mcu">MCU</span></td>
+      <td>6轴 · I2C</td>
+    </tr>
+  </table>
+</section>
+
+<section id="structure">
+  <h2 class="section-title">📁 项目结构</h2>
+  <div class="structure">
+robot/<br>
+├── <span class="dir">docs/</span>            <span class="comment"># 文档 + 本网站源</span><br>
+│   ├── <span class="file">index.md</span>                  <span class="comment"># ← 你在这里</span><br>
+│   ├── <span class="file">PLAN.md</span>                   <span class="comment"># 总体规划</span><br>
+│   ├── <span class="dir">electrical/</span>               <span class="comment"># 电路与固件文档</span><br>
+│   └── <span class="dir">mechanical/</span>              <span class="comment"># 机械结构文档</span><br>
+├── <span class="dir">firmware/</span>        <span class="comment"># ESP32 固件代码</span><br>
+├── <span class="dir">software/</span>        <span class="comment"># 上层软件 (ROS2 / AI)</span><br>
+├── <span class="dir">cad/</span>             <span class="comment"># CAD模型</span><br>
+├── <span class="dir">pcb/</span>             <span class="comment"># PCB设计文件</span><br>
+└── <span class="dir">materials/</span>      <span class="comment"># 物料清单 (BOM)</span>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">🔗 快速链接</h2>
+  <div class="link-grid">
+    <a class="link-card" href="PLAN.md">
+      <span class="emoji">📋</span>
+      <div><div class="link-title">总体规划</div><div class="link-desc">路线图 · 阶段计划 · 技术方案</div></div>
+    </a>
+    <a class="link-card" href="electrical/tech-report.md">
+      <span class="emoji">⚡</span>
+      <div><div class="link-title">底层技术报告</div><div class="link-desc">控制器 · 电机 · 仿真 · 学习路径</div></div>
+    </a>
+    <a class="link-card" href="mechanical/chassis-decision.md">
+      <span class="emoji">🛞</span>
+      <div><div class="link-title">底盘决策分析</div><div class="link-desc">4轮差速 vs 履带式 对比</div></div>
+    </a>
+    <a class="link-card" href="design-notes.md">
+      <span class="emoji">📝</span>
+      <div><div class="link-title">设计讨论记录</div><div class="link-desc">所有决策过程记录</div></div>
+    </a>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p><a href="https://github.com/zhangshuaiqing/robot">zhangshuaiqing/robot</a> · MIT License · Built with ❤️</p>
+  <p style="margin-top: 4px; font-size: 0.75rem;">从轮式底盘到多模态智能体 · 全程开源</p>
+</footer>
+
+</body>
+</html>

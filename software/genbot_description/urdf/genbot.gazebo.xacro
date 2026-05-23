@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<robot name="genbot_gazebo" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+   ============================================================
+    Gazebo Harmonic (gz-sim 8) 插件配置
+   ============================================================
+   Gazebo Harmonic 使用 <gz::sim::systems::...> 命名空间
+   不再使用旧版 <gazebo> 标签中的 libgazebo_ros_*.so
+   通过 ros_gz_bridge 桥接 ROS2 ↔ Gazebo 通信
+   ============================================================
+  -->
+
+  <!-- 底盘物理参数 -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+    <gravity>true</gravity>
+    <selfCollide>false</selfCollide>
+    <kinematic>false</kinematic>
+    <mu1>0.5</mu1>
+    <mu2>0.5</mu2>
+    <friction1>0.5</friction1>
+    <friction2>0.5</friction2>
+  </gazebo>
+
+  <!-- 驱动轮物理参数 -->
+  <gazebo reference="left_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <friction1>1.0</friction1>
+    <friction2>1.0</friction2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <friction1>1.0</friction1>
+    <friction2>1.0</friction2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- 万向轮：低摩擦 -->
+  <gazebo reference="caster_front_left_wheel">
+    <mu1>0.01</mu1>
+    <mu2>0.01</mu2>
+  </gazebo>
+  <gazebo reference="caster_front_right_wheel">
+    <mu1>0.01</mu1>
+    <mu2>0.01</mu2>
+  </gazebo>
+
+  <!-- 差速驱动系统（gz-sim原生插件） -->
+  <gazebo>
+    <plugin filename="libgz-sim-diff-drive-system.so"
+            name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>${wheel_track}</wheel_separation>
+      <wheel_radius>${wheel_radius}</wheel_radius>
+      <odom_publisher_frequency>50</odom_publisher_frequency>
+      <topic>/cmd_vel</topic>
+      <odom_topic>/odom</odom_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <min_velocity>-0.5</min_velocity>
+      <max_velocity>0.5</max_velocity>
+      <min_acceleration>-0.3</min_acceleration>
+      <max_acceleration>0.3</max_acceleration>
+    </plugin>
+  </gazebo>
+
+  <!-- LiDAR 传感器 -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <topic>/scan</topic>
+      <update_rate>10</update_rate>
+      <lidar>
+        <scan_count>1</scan_count>
+        <scan_angle_start>0.0</scan_angle_start>
+        <scan_angle_end>6.283185</scan_angle_end>
+        <scan_samples>360</scan_samples>
+        <range_min>0.15</range_min>
+        <range_max>12.0</range_max>
+        <range_resolution>0.015</range_resolution>
+      </lidar>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.01</stddev>
+      </noise>
+      <always_on>1</always_on>
+      <visualize>true</visualize>
+    </sensor>
+  </gazebo>
+
+  <!-- RGB 相机 -->
+  <gazebo reference="camera_link">
+    <sensor name="rgb_camera" type="camera">
+      <topic>/camera/color/image_raw</topic>
+      <update_rate>30</update_rate>
+      <camera>
+        <horizontal_fov>1.204</horizontal_fov>
+        <image>
+          <width>1280</width>
+          <height>720</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>30.0</far>
+        </clip>
+      </camera>
+      <always_on>1</always_on>
+      <visualize>true</visualize>
+    </sensor>
+
+    <!-- 深度相机 -->
+    <sensor name="depth_camera" type="depth_camera">
+      <topic>/camera/depth/image_raw</topic>
+      <update_rate>30</update_rate>
+      <camera>
+        <horizontal_fov>1.396</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>L16</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>10.0</far>
+        </clip>
+      </camera>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU -->
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <topic>/imu/data_raw</topic>
+      <update_rate>100</update_rate>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+    </sensor>
+  </gazebo>
+
+</robot>

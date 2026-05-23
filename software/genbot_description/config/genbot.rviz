@@ -1,0 +1,54 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.8
+      Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Robot Description: robot_description
+      Visual Enabled: true
+      Links:
+        All Links Enabled: true
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 1
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Update Interval: 0
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Reference Frame: base_footprint
+      Plane Cell Count: 20
+      Plane Cell Size: 0.2
+    - Class: rviz_default_plugins/Grid
+      Name: Ground Grid
+      Reference Frame: base_footprint
+      Plane Cell Count: 20
+      Plane Cell Size: 0.2
+      Offset: 0.045
+      Normal: Z
+      Color: 120; 120; 120
+      Enabled: true
+  Global Options:
+    Fixed Frame: base_footprint
+    Frame Rate: 30
+    Background Color: 30; 30; 30
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1.2
+      Focal Shape Size: 0.05
+      Focal Point: [0, 0, 0]
+      Angle: 0.785
