@@ -83,21 +83,37 @@ ros2 run xacro xacro software/genbot_description/urdf/genbot.urdf.xacro | head -
 
 ## 四、项目编译
 
+每次新开终端都需要：
+
+```bash
+cd /media/zsq-508/data/project/robot
+source /opt/ros/humble/setup.bash   # 加载ROS2环境
+colcon build --packages-select genbot_description  # 编译
+source install/setup.bash           # 加载项目包
+```
+
+**简化做法：** 把 source 加到 `~/.bashrc` 就不用每次都手动执行
+
+```bash
+echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
+echo 'source /media/zsq-508/data/project/robot/install/setup.bash' >> ~/.bashrc
+source ~/.bashrc
+```
+
 ### 4.1 首次编译
+
+```bash
+cd /media/zsq-508/data/project/robot
+colcon build --packages-select genbot_description
+```
+
+### 4.2 更新后重新编译
 
 ```bash
 cd /media/zsq-508/data/project/robot
 colcon build --packages-select genbot_description
 source install/setup.bash
 ```
-
-### 4.2 更新后重新编译
-
-```bash
-colcon build --packages-select genbot_description --cmake-clean-first
-source install/setup.bash
-```
-
 ---
 
 ## 五、运行验证

@@ -14,6 +14,7 @@ from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -43,8 +44,10 @@ def generate_launch_description():
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time,
-                      'robot_description': robot_desc}],
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'robot_description': ParameterValue(robot_desc, value_type=str),
+        }],
     )
 
     # 3. 生成机器人在Gazebo中
