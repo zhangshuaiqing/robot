@@ -1,0 +1,132 @@
+<mujoco model="genbot_ackermann">
+  <compiler angle="radian" coordinate="local" meshdir="none"/>
+
+  <option timestep="0.005" integrator="Euler">
+    <flag gravity="enable" contact="enable" friction="enable"/>
+  </option>
+
+  <size nstack="300000" nconmax="400"/>
+
+  <visual>
+    <quality shadowsize="1024"/>
+  </visual>
+
+  <!-- 默认材质 -->
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".15 .15 .15" rgb2=".2 .2 .2" width="512" height="512"/>
+    <material name="ground" texture="grid" texrepeat="4 4" texuniform="false" reflectance="0.0"/>
+    <material name="chassis" rgba="0.25 0.25 0.28 1.0"/>
+    <material name="wheel" rgba="0.08 0.08 0.08 1.0"/>
+    <material name="target" rgba="0.0 0.8 0.0 0.6"/>
+    <material name="obstacle" rgba="0.8 0.2 0.2 0.8"/>
+  </asset>
+
+  <!-- 默认设置 -->
+  <default>
+    <joint type="hinge" damping="0.01" frictionloss="0.001"/>
+    <geom friction="0.8 0.01 0.01" condim="3"/>
+  </default>
+
+  <worldbody>
+    <light name="light0" pos="0 0 3" dir="0 0 -1" directional="true" castshadow="true"/>
+    <light name="light1" pos="-1 -1 2" dir="1 1 -1" directional="true"/>
+
+    <!-- 地面 -->
+    <geom name="floor" type="plane" size="5 5 0.1" material="ground"/>
+
+    <!-- ==================== 底盘 ==================== -->
+    <body name="chassis" pos="0 0 0.09">
+      <freejoint/>
+      <geom name="chassis_geom" type="box" size="0.200 0.140 0.040" material="chassis" mass="4.0"/>
+
+      <!-- 惯性参数 -->
+      <inertial pos="0 0 0" mass="4.0" diaginertia="0.02 0.03 0.04"/>
+
+      <!-- ===== 前左轮（转向 + 滚动） ===== -->
+      <body name="front_left_steering" pos="0.150 0.120 -0.040">
+        <joint name="front_left_steer" type="hinge" axis="0 0 1" pos="0 0 0"
+               limited="true" range="-0.6 0.6" stiffness="0.0"/>
+        <geom name="fl_steer_geom" type="box" size="0.015 0.015 0.040" mass="0.15" material="chassis"/>
+
+        <body name="front_left_wheel" pos="0 0 -0.040">
+          <joint name="front_left_wheel" type="hinge" axis="0 1 0"/>
+          <geom name="fl_wheel_geom" type="cylinder" size="0.050 0.0175" mass="0.3" material="wheel"/>
+        </body>
+      </body>
+
+      <!-- ===== 前右轮（转向 + 滚动） ===== -->
+      <body name="front_right_steering" pos="0.150 -0.120 -0.040">
+        <joint name="front_right_steer" type="hinge" axis="0 0 1" pos="0 0 0"
+               limited="true" range="-0.6 0.6" stiffness="0.0"/>
+        <geom name="fr_steer_geom" type="box" size="0.015 0.015 0.040" mass="0.15" material="chassis"/>
+
+        <body name="front_right_wheel" pos="0 0 -0.040">
+          <joint name="front_right_wheel" type="hinge" axis="0 1 0"/>
+          <geom name="fr_wheel_geom" type="cylinder" size="0.050 0.0175" mass="0.3" material="wheel"/>
+        </body>
+      </body>
+
+      <!-- ===== 后左轮（仅驱动） ===== -->
+      <body name="rear_left_wheel" pos="-0.150 0.120 -0.040">
+        <joint name="rear_left_wheel" type="hinge" axis="0 1 0"/>
+        <geom name="rl_wheel_geom" type="cylinder" size="0.050 0.0175" mass="0.3" material="wheel"/>
+      </body>
+
+      <!-- ===== 后右轮（仅驱动） ===== -->
+      <body name="rear_right_wheel" pos="-0.150 -0.120 -0.040">
+        <joint name="rear_right_wheel" type="hinge" axis="0 1 0"/>
+        <geom name="rr_wheel_geom" type="cylinder" size="0.050 0.0175" mass="0.3" material="wheel"/>
+      </body>
+
+      <!-- LiDAR 位置标记（实际通过 mocap 或 site 来实现） -->
+      <site name="lidar_site" pos="0 0 0.050" size="0.01 0.01 0.01" rgba="0 0 1 1"/>
+    </body>
+
+    <!-- ==================== 目标点 ==================== -->
+    <body name="target" pos="2.0 0 0.01">
+      <geom name="target_geom" type="sphere" size="0.15" material="target"/>
+    </body>
+  </worldbody>
+
+  <!-- ==================== 执行器 ==================== -->
+  <actuator>
+    <!-- 后轮驱动：速度控制 -->
+    <motor name="rear_left_motor" joint="rear_left_wheel" ctrlrange="-10.0 10.0" ctrllimited="true"/>
+    <motor name="rear_right_motor" joint="rear_right_wheel" ctrlrange="-10.0 10.0" ctrllimited="true"/>
+
+    <!-- 前轮转向：位置控制（阿克曼转角） -->
+    <position name="front_left_steer_act" joint="front_left_steer"
+              kp="5.0" ctrlrange="-0.6 0.6" ctrllimited="true"/>
+    <position name="front_right_steer_act" joint="front_right_steer"
+              kp="5.0" ctrlrange="-0.6 0.6" ctrllimited="true"/>
+  </actuator>
+
+  <!-- ==================== 传感器 ==================== -->
+  <sensor>
+    <!-- LiDAR: 16束射线，360度 -->
+    <rangefinder name="lidar_0" site="lidar_site" pos="0 0 0" dir="1 0 0"/>
+    <rangefinder name="lidar_1" site="lidar_site" pos="0 0 0" dir="0.92388 0.382683 0"/>
+    <rangefinder name="lidar_2" site="lidar_site" pos="0 0 0" dir="0.707107 0.707107 0"/>
+    <rangefinder name="lidar_3" site="lidar_site" pos="0 0 0" dir="0.382683 0.92388 0"/>
+    <rangefinder name="lidar_4" site="lidar_site" pos="0 0 0" dir="0 1 0"/>
+    <rangefinder name="lidar_5" site="lidar_site" pos="0 0 0" dir="-0.382683 0.92388 0"/>
+    <rangefinder name="lidar_6" site="lidar_site" pos="0 0 0" dir="-0.707107 0.707107 0"/>
+    <rangefinder name="lidar_7" site="lidar_site" pos="0 0 0" dir="-0.92388 0.382683 0"/>
+    <rangefinder name="lidar_8" site="lidar_site" pos="0 0 0" dir="-1 0 0"/>
+    <rangefinder name="lidar_9" site="lidar_site" pos="0 0 0" dir="-0.92388 -0.382683 0"/>
+    <rangefinder name="lidar_10" site="lidar_site" pos="0 0 0" dir="-0.707107 -0.707107 0"/>
+    <rangefinder name="lidar_11" site="lidar_site" pos="0 0 0" dir="-0.382683 -0.92388 0"/>
+    <rangefinder name="lidar_12" site="lidar_site" pos="0 0 0" dir="0 -1 0"/>
+    <rangefinder name="lidar_13" site="lidar_site" pos="0 0 0" dir="0.382683 -0.92388 0"/>
+    <rangefinder name="lidar_14" site="lidar_site" pos="0 0 0" dir="0.707107 -0.707107 0"/>
+    <rangefinder name="lidar_15" site="lidar_site" pos="0 0 0" dir="0.92388 -0.382683 0"/>
+
+    <!-- 速度 -->
+    <velocimeter name="velocity" site="lidar_site"/>
+  </sensor>
+
+  <!-- 关键帧 -->
+  <keyframe>
+    <key name="start" qpos="0 0 0 1 0 0 0"/>
+  </keyframe>
+</mujoco>
