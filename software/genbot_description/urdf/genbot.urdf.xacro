@@ -3,24 +3,23 @@
 
   <!--
    ============================================================
-    GenBot 4WD — 4轮差速通用机器人开发平台
+    GenBot Ackermann — 阿克曼转向通用机器人开发平台
    ============================================================
-   底盘: 350mm x 280mm
+   底盘: 400mm x 280mm
+   转向: 前轮阿克曼转向（左右转角不同）
    驱动: 后轮JGA25-371直流有刷编码电机
-   从动: 前工业万向轮
    传感器: RPLIDAR A1 (顶) + Realsense D435 (前) + MPU6050 (内)
    仿真: Gazebo Harmonic (gz-sim 8)
    ============================================================
   -->
 
-  <!-- 颜色定义 -->
   <material name="ChassisGray">
     <color rgba="0.25 0.25 0.28 1.0"/>
   </material>
   <material name="WheelBlack">
     <color rgba="0.08 0.08 0.08 1.0"/>
   </material>
-  <material name="CasterSilver">
+  <material name="UprightSilver">
     <color rgba="0.70 0.70 0.72 1.0"/>
   </material>
   <material name="LidarBlue">
@@ -34,18 +33,15 @@
   </material>
 
   <!-- ========== 机器人参数 ========== -->
-  <xacro:property name="chassis_length"  value="0.350"/>
-  <xacro:property name="chassis_width"   value="0.280"/>
-  <xacro:property name="chassis_height"  value="0.080"/>
-  <xacro:property name="clearance"       value="0.050"/>
+  <xacro:property name="wheel_base"    value="0.300"/>
+  <xacro:property name="wheel_track"   value="0.240"/>
+  <xacro:property name="chassis_length" value="0.400"/>
+  <xacro:property name="chassis_width"  value="0.280"/>
+  <xacro:property name="chassis_height" value="0.080"/>
+  <xacro:property name="clearance"      value="0.050"/>
 
-  <xacro:property name="wheel_radius"    value="0.050"/>
-  <xacro:property name="wheel_width"     value="0.035"/>
-  <xacro:property name="wheel_track"     value="0.240"/>
-  <xacro:property name="wheel_base"      value="0.220"/>
-
-  <xacro:property name="caster_radius"   value="0.020"/>
-  <xacro:property name="caster_arm"      value="0.025"/>
+  <xacro:property name="wheel_radius"   value="0.050"/>
+  <xacro:property name="wheel_width"    value="0.035"/>
 
   <!-- ========== 惯性宏 ========== -->
   <xacro:macro name="inertia_box" params="mass x y z">
@@ -68,17 +64,7 @@
     </inertial>
   </xacro:macro>
 
-  <xacro:macro name="inertia_sphere" params="mass r">
-    <inertial>
-      <mass value="${mass}"/>
-      <inertia ixx="${0.4*mass*r*r}"
-               iyy="${0.4*mass*r*r}"
-               izz="${0.4*mass*r*r}"
-               ixy="0" iyz="0" ixz="0"/>
-    </inertial>
-  </xacro:macro>
-
-  <!-- ========== base_footprint（地面投影）========== -->
+  <!-- ========== base_footprint ========== -->
   <link name="base_footprint"/>
 
   <!-- ========== 底盘 ========== -->
@@ -101,8 +87,33 @@
     <origin xyz="0 0 ${clearance + chassis_height/2}" rpy="0 0 0"/>
   </joint>
 
-  <!-- ========== 后轮 — 驱动轮（左）========== -->
-  <link name="left_wheel">
+  <!-- ================================================================ -->
+  <!--  前轮 — 左（转向节 + 转向关节 + 轮子 + 滚动关节）                -->
+  <!-- ================================================================ -->
+
+  <link name="front_left_steering_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.030 0.030 0.080"/></geometry>
+      <material name="UprightSilver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.030 0.030 0.080"/></geometry>
+    </collision>
+    <xacro:inertia_box mass="0.15" x="0.03" y="0.03" z="0.08"/>
+  </link>
+
+  <joint name="front_left_steering_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="front_left_steering_link"/>
+    <origin xyz="${wheel_base/2} ${wheel_track/2} ${-chassis_height/2}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0" velocity="3.0" lower="-0.6" upper="0.6"/>
+    <dynamics damping="0.05" friction="0.01"/>
+  </joint>
+
+  <link name="front_left_wheel">
     <visual>
       <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
       <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
@@ -115,17 +126,94 @@
     <xacro:inertia_cyl mass="0.3" r="${wheel_radius}" l="${wheel_width}"/>
   </link>
 
-  <joint name="left_wheel_joint" type="continuous">
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="front_left_steering_link"/>
+    <child link="front_left_wheel"/>
+    <origin xyz="0 0 -0.045" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="0.5" velocity="10.0"/>
+    <dynamics damping="0.01" friction="0.01"/>
+  </joint>
+
+  <!-- ================================================================ -->
+  <!--  前轮 — 右                                                      -->
+  <!-- ================================================================ -->
+
+  <link name="front_right_steering_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.030 0.030 0.080"/></geometry>
+      <material name="UprightSilver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.030 0.030 0.080"/></geometry>
+    </collision>
+    <xacro:inertia_box mass="0.15" x="0.03" y="0.03" z="0.08"/>
+  </link>
+
+  <joint name="front_right_steering_joint" type="revolute">
     <parent link="base_link"/>
-    <child link="left_wheel"/>
+    <child link="front_right_steering_link"/>
+    <origin xyz="${wheel_base/2} ${-wheel_track/2} ${-chassis_height/2}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0" velocity="3.0" lower="-0.6" upper="0.6"/>
+    <dynamics damping="0.05" friction="0.01"/>
+  </joint>
+
+  <link name="front_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      <material name="WheelBlack"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+    </collision>
+    <xacro:inertia_cyl mass="0.3" r="${wheel_radius}" l="${wheel_width}"/>
+  </link>
+
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="front_right_steering_link"/>
+    <child link="front_right_wheel"/>
+    <origin xyz="0 0 -0.045" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="0.5" velocity="10.0"/>
+    <dynamics damping="0.01" friction="0.01"/>
+  </joint>
+
+  <!-- ================================================================ -->
+  <!--  后轮 — 左（仅驱动，不转向）                                    -->
+  <!-- ================================================================ -->
+
+  <link name="rear_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      <material name="WheelBlack"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+    </collision>
+    <xacro:inertia_cyl mass="0.3" r="${wheel_radius}" l="${wheel_width}"/>
+  </link>
+
+  <joint name="rear_left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="rear_left_wheel"/>
     <origin xyz="${-wheel_base/2} ${wheel_track/2} ${-chassis_height/2}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <limit effort="0.5" velocity="10.0"/>
     <dynamics damping="0.01" friction="0.01"/>
   </joint>
 
-  <!-- ========== 后轮 — 驱动轮（右）========== -->
-  <link name="right_wheel">
+  <!-- ================================================================ -->
+  <!--  后轮 — 右                                                      -->
+  <!-- ================================================================ -->
+
+  <link name="rear_right_wheel">
     <visual>
       <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
       <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
@@ -138,99 +226,13 @@
     <xacro:inertia_cyl mass="0.3" r="${wheel_radius}" l="${wheel_width}"/>
   </link>
 
-  <joint name="right_wheel_joint" type="continuous">
+  <joint name="rear_right_wheel_joint" type="continuous">
     <parent link="base_link"/>
-    <child link="right_wheel"/>
+    <child link="rear_right_wheel"/>
     <origin xyz="${-wheel_base/2} ${-wheel_track/2} ${-chassis_height/2}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <limit effort="0.5" velocity="10.0"/>
     <dynamics damping="0.01" friction="0.01"/>
-  </joint>
-
-  <!-- ========== 前万向轮 — 左 ========== -->
-  <link name="caster_front_left_fork">
-    <visual>
-      <origin xyz="0 0 ${-caster_arm/2}" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="${caster_arm}"/></geometry>
-      <material name="CasterSilver"/>
-    </visual>
-    <collision>
-      <origin xyz="0 0 ${-caster_arm/2}" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="${caster_arm}"/></geometry>
-    </collision>
-    <xacro:inertia_cyl mass="0.03" r="0.008" l="${caster_arm}"/>
-  </link>
-
-  <joint name="caster_front_left_fork_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="caster_front_left_fork"/>
-    <origin xyz="${chassis_length/2 - 0.030} ${0.100} ${-chassis_height/2}" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <dynamics damping="0.001" friction="0.001"/>
-  </joint>
-
-  <link name="caster_front_left_wheel">
-    <visual>
-      <origin xyz="0 0 ${-caster_arm}" rpy="0 0 0"/>
-      <geometry><sphere radius="${caster_radius}"/></geometry>
-      <material name="WheelBlack"/>
-    </visual>
-    <collision>
-      <origin xyz="0 0 ${-caster_arm}" rpy="0 0 0"/>
-      <geometry><sphere radius="${caster_radius}"/></geometry>
-    </collision>
-    <xacro:inertia_sphere mass="0.05" r="${caster_radius}"/>
-  </link>
-
-  <joint name="caster_front_left_wheel_joint" type="continuous">
-    <parent link="caster_front_left_fork"/>
-    <child link="caster_front_left_wheel"/>
-    <origin xyz="0 0 ${-caster_arm}" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <dynamics damping="0.001" friction="0.001"/>
-  </joint>
-
-  <!-- ========== 前万向轮 — 右 ========== -->
-  <link name="caster_front_right_fork">
-    <visual>
-      <origin xyz="0 0 ${-caster_arm/2}" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="${caster_arm}"/></geometry>
-      <material name="CasterSilver"/>
-    </visual>
-    <collision>
-      <origin xyz="0 0 ${-caster_arm/2}" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.008" length="${caster_arm}"/></geometry>
-    </collision>
-    <xacro:inertia_cyl mass="0.03" r="0.008" l="${caster_arm}"/>
-  </link>
-
-  <joint name="caster_front_right_fork_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="caster_front_right_fork"/>
-    <origin xyz="${chassis_length/2 - 0.030} ${-0.100} ${-chassis_height/2}" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <dynamics damping="0.001" friction="0.001"/>
-  </joint>
-
-  <link name="caster_front_right_wheel">
-    <visual>
-      <origin xyz="0 0 ${-caster_arm}" rpy="0 0 0"/>
-      <geometry><sphere radius="${caster_radius}"/></geometry>
-      <material name="WheelBlack"/>
-    </visual>
-    <collision>
-      <origin xyz="0 0 ${-caster_arm}" rpy="0 0 0"/>
-      <geometry><sphere radius="${caster_radius}"/></geometry>
-    </collision>
-    <xacro:inertia_sphere mass="0.05" r="${caster_radius}"/>
-  </link>
-
-  <joint name="caster_front_right_wheel_joint" type="continuous">
-    <parent link="caster_front_right_fork"/>
-    <child link="caster_front_right_wheel"/>
-    <origin xyz="0 0 ${-caster_arm}" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <dynamics damping="0.001" friction="0.001"/>
   </joint>
 
   <!-- ========== RPLIDAR A1 ========== -->
@@ -260,7 +262,6 @@
       <geometry><box size="0.090 0.025 0.025"/></geometry>
       <material name="CameraDark"/>
     </visual>
-    <!-- 镜头 -->
     <visual>
       <origin xyz="0.045 0.008 0.008" rpy="0 0 0"/>
       <geometry><box size="0.005 0.015 0.012"/></geometry>
@@ -299,7 +300,6 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- Gazebo 插件配置 -->
-  <xacro:include filename="$(find genbot_description)/urdf/genbot.gazebo.xacro" />
+  <xacro:include filename="$(find genbot_description)/urdf/genbot.gazebo.xacro"/>
 
 </robot>

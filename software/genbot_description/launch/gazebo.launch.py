@@ -49,7 +49,15 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': use_sim_time,
             'robot_description': ParameterValue(robot_desc, value_type=str),
+            'publish_fixed_joints': True,
         }],
+    )
+
+    # 静态TF: base_footprint -> base_link
+    static_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'base_link'],
     )
 
     # 3. 生成机器人在Gazebo中
@@ -67,12 +75,11 @@ def generate_launch_description():
     )
 
     # 4. ros_gz_bridge 桥接 ROS2 ↔ Gazebo 话题
-    # 将 Gazebo 的 /odom, /scan, /imu/data_raw 等桥接到 ROS2
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            # 差速驱动 → ROS2
+            # 后轮差速驱动 → ROS2
             '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
             '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
             # LiDAR → ROS2
@@ -85,6 +92,9 @@ def generate_launch_description():
             '/imu/data_raw@sensor_msgs/msg/Imu@gz.msgs.IMU',
             # TF
             '/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V',
+            # 阿克曼转向命令（ROS2 → Gazebo）
+            '/cmd_steer_left@std_msgs/msg/Float64@gz.msgs.Double',
+            '/cmd_steer_right@std_msgs/msg/Float64@gz.msgs.Double',
         ],
         remappings=[
             ('/camera/color/image_raw', '/camera/image_raw'),
@@ -93,14 +103,25 @@ def generate_launch_description():
         output='screen',
     )
 
-    # 5. rqt或键盘控制（可选）
-    # 用 ros2 run teleop_twist_keyboard teleop_twist_keyboard 手动控制
+    # 5. 阿克曼转角计算节点
+    ackermann_node = Node(
+        package='genbot_control',
+        executable='ackermann_steering_node.py',
+        parameters=[{
+            'wheel_base': 0.300,
+            'wheel_track': 0.240,
+            'max_steering_angle': 0.6,
+        }],
+        output='screen',
+    )
 
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('world', default_value=world_path),
         gazebo,
         robot_state_publisher,
+        static_tf,
         spawn,
         bridge,
+        ackermann_node,
     ])

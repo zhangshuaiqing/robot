@@ -3,15 +3,14 @@
 
   <!--
    ============================================================
-    Gazebo Harmonic (gz-sim 8) 插件配置
+    GenBot Ackermann — Gazebo Harmonic (gz-sim 8) 插件配置
    ============================================================
-   Gazebo Harmonic 使用 <gz::sim::systems::...> 命名空间
-   不再使用旧版 <gazebo> 标签中的 libgazebo_ros_*.so
-   通过 ros_gz_bridge 桥接 ROS2 ↔ Gazebo 通信
+   后轮: DiffDrive（速度控制）
+   前轮: JointPositionController（位置控制，阿克曼转角）
    ============================================================
   -->
 
-  <!-- 底盘物理参数 -->
+  <!-- 底盘物理 -->
   <gazebo reference="base_link">
     <material>Gazebo/Grey</material>
     <gravity>true</gravity>
@@ -23,8 +22,15 @@
     <friction2>0.5</friction2>
   </gazebo>
 
-  <!-- 驱动轮物理参数 -->
-  <gazebo reference="left_wheel">
+  <!-- 后轮驱动 — 高摩擦 -->
+  <gazebo reference="rear_left_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <friction1>1.0</friction1>
+    <friction2>1.0</friction2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+  <gazebo reference="rear_right_wheel">
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
     <friction1>1.0</friction1>
@@ -32,30 +38,37 @@
     <material>Gazebo/Black</material>
   </gazebo>
 
-  <gazebo reference="right_wheel">
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <friction1>1.0</friction1>
-    <friction2>1.0</friction2>
+  <!-- 前轮转向节 — 中等摩擦 -->
+  <gazebo reference="front_left_steering_link">
+    <mu1>0.3</mu1>
+    <mu2>0.3</mu2>
+  </gazebo>
+  <gazebo reference="front_right_steering_link">
+    <mu1>0.3</mu1>
+    <mu2>0.3</mu2>
+  </gazebo>
+
+  <!-- 前轮 — 低摩擦（转向轮需要低侧向摩擦） -->
+  <gazebo reference="front_left_wheel">
+    <mu1>0.3</mu1>
+    <mu2>0.3</mu2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+  <gazebo reference="front_right_wheel">
+    <mu1>0.3</mu1>
+    <mu2>0.3</mu2>
     <material>Gazebo/Black</material>
   </gazebo>
 
-  <!-- 万向轮：低摩擦 -->
-  <gazebo reference="caster_front_left_wheel">
-    <mu1>0.01</mu1>
-    <mu2>0.01</mu2>
-  </gazebo>
-  <gazebo reference="caster_front_right_wheel">
-    <mu1>0.01</mu1>
-    <mu2>0.01</mu2>
-  </gazebo>
-
-  <!-- 差速驱动系统（gz-sim原生插件） -->
+  <!-- ============================================================ -->
+  <!--  后轮差速驱动（DiffDrive）                                    -->
+  <!--  订阅 /cmd_vel 中的 linear.x 速度                            -->
+  <!-- ============================================================ -->
   <gazebo>
     <plugin filename="libgz-sim-diff-drive-system.so"
             name="gz::sim::systems::DiffDrive">
-      <left_joint>left_wheel_joint</left_joint>
-      <right_joint>right_wheel_joint</right_joint>
+      <left_joint>rear_left_wheel_joint</left_joint>
+      <right_joint>rear_right_wheel_joint</right_joint>
       <wheel_separation>${wheel_track}</wheel_separation>
       <wheel_radius>${wheel_radius}</wheel_radius>
       <odom_publisher_frequency>50</odom_publisher_frequency>
@@ -70,19 +83,58 @@
     </plugin>
   </gazebo>
 
-  <!-- LiDAR 传感器 -->
+  <!-- ============================================================ -->
+  <!--  前轮转向控制（JointPositionController）                     -->
+  <!--  通过 /cmd_steer_left 和 /cmd_steer_right 控制转向角度       -->
+  <!--  阿克曼转角由外部节点计算后发布                               -->
+  <!-- ============================================================ -->
+  <gazebo>
+    <plugin filename="libgz-sim-joint-position-controller-system.so"
+            name="gz::sim::systems::JointPositionController">
+      <joint_name>front_left_steering_joint</joint_name>
+      <topic>/cmd_steer_left</topic>
+      <use_cmd_composition>true</use_cmd_composition>
+      <publish_cmd>true</publish_cmd>
+      <publish_state>true</publish_state>
+      <publish_pose>true</publish_pose>
+      <publish_wrench>false</publish_wrench>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin filename="libgz-sim-joint-position-controller-system.so"
+            name="gz::sim::systems::JointPositionController">
+      <joint_name>front_right_steering_joint</joint_name>
+      <topic>/cmd_steer_right</topic>
+      <use_cmd_composition>true</use_cmd_composition>
+      <publish_cmd>true</publish_cmd>
+      <publish_state>true</publish_state>
+      <publish_pose>true</publish_pose>
+      <publish_wrench>false</publish_wrench>
+    </plugin>
+  </gazebo>
+
+  <!-- ============================================================ -->
+  <!--  LiDAR                                                       -->
+  <!-- ============================================================ -->
   <gazebo reference="lidar_link">
     <sensor name="lidar" type="gpu_lidar">
       <topic>/scan</topic>
       <update_rate>10</update_rate>
       <lidar>
-        <scan_count>1</scan_count>
-        <scan_angle_start>0.0</scan_angle_start>
-        <scan_angle_end>6.283185</scan_angle_end>
-        <scan_samples>360</scan_samples>
-        <range_min>0.15</range_min>
-        <range_max>12.0</range_max>
-        <range_resolution>0.015</range_resolution>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1.0</resolution>
+            <min_angle>0.0</min_angle>
+            <max_angle>6.283185</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.15</min>
+          <max>12.0</max>
+          <resolution>0.015</resolution>
+        </range>
       </lidar>
       <noise>
         <type>gaussian</type>
@@ -94,7 +146,9 @@
     </sensor>
   </gazebo>
 
-  <!-- RGB 相机 -->
+  <!-- ============================================================ -->
+  <!--  RGB 相机 + 深度相机                                         -->
+  <!-- ============================================================ -->
   <gazebo reference="camera_link">
     <sensor name="rgb_camera" type="camera">
       <topic>/camera/color/image_raw</topic>
@@ -115,7 +169,6 @@
       <visualize>true</visualize>
     </sensor>
 
-    <!-- 深度相机 -->
     <sensor name="depth_camera" type="depth_camera">
       <topic>/camera/depth/image_raw</topic>
       <update_rate>30</update_rate>
@@ -136,7 +189,9 @@
     </sensor>
   </gazebo>
 
-  <!-- IMU -->
+  <!-- ============================================================ -->
+  <!--  IMU                                                        -->
+  <!-- ============================================================ -->
   <gazebo reference="imu_link">
     <sensor name="imu" type="imu">
       <topic>/imu/data_raw</topic>
