@@ -106,14 +106,14 @@ source ~/.bashrc
 cd /media/zsq-508/data/project/robot
 colcon build --packages-select genbot_description
 ```
-
 ### 4.2 更新后重新编译
 
 ```bash
 cd /media/zsq-508/data/project/robot
-colcon build --packages-select genbot_description
+colcon build --packages-select genbot_description genbot_control
 source install/setup.bash
 ```
+
 ---
 
 ## 五、运行验证
@@ -121,20 +121,64 @@ source install/setup.bash
 ### 5.1 RViz 中查看模型
 
 ```bash
+# 终端1
+cd /media/zsq-508/data/project/robot
+source install/setup.bash
 ros2 launch genbot_description display.launch.py
+
+# 如果只想看模型不打开RViz GUI:
+# ros2 launch genbot_description display.launch.py rviz:=false
 ```
 
-### 5.2 Gazebo 中启动
+### 5.2 Gazebo 中启动完整仿真
+
+机器人模型 + 传感器 + 阿克曼转向控制 全部启动：
 
 ```bash
+cd /media/zsq-508/data/project/robot
+source install/setup.bash
 ros2 launch genbot_description gazebo.launch.py
 ```
 
-### 5.3 键盘控制
+启动后会自动打开 Gazebo GUI 窗口，包含：
+- GenBot 阿克曼机器人（地面平面上）
+- LiDAR / 相机 / IMU 传感器
+- 阿克曼转向节点（/cmd_vel → 前轮转角计算）
+- ros_gz_bridge 话题桥接
+
+### 5.3 键盘控制机器人
 
 ```bash
-# 另开终端
+# 在Gazebo运行时，另开一个终端：
+cd /media/zsq-508/data/project/robot
+source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+控制方式：
+- `i` — 前进
+- `,` — 后退
+- `j` — 左转（阿克曼转向，前轮左右转角不同）
+- `l` — 右转
+- `k` — 停止
+- `q/z` — 加速/减速
+
+### 5.4 查看话题数据
+
+```bash
+# 查看所有活跃话题
+source install/setup.bash
+ros2 topic list
+
+# 查看里程计
+ros2 topic echo /odom
+
+# 查看LiDAR扫描
+ros2 topic echo /scan
+
+# 查看阿克曼转向命令
+ros2 topic echo /cmd_steer_left
+ros2 topic echo /cmd_steer_right
 ```
 
 ### 5.4 建图与导航
@@ -157,15 +201,17 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 robot/
 ├── software/genbot_description/     # URDF 模型包
-│   ├── urdf/genbot.urdf.xacro       # 主模型文件
+│   ├── urdf/genbot.urdf.xacro       # ★ 阿克曼转向模型（前轮转向+后轮驱动）
 │   ├── urdf/genbot.gazebo.xacro     # Gazebo 插件配置
-│   ├── launch/gazebo.launch.py      # Gazebo 启动
+│   ├── launch/gazebo.launch.py      # Gazebo 启动（含阿克曼节点）
 │   ├── launch/display.launch.py     # RViz 启动
 │   ├── worlds/genbot.world          # 测试场景
 │   └── rviz/genbot.rviz             # RViz 预设
+├── software/genbot_control/         # 控制节点包
+│   └── genbot_control/ackermann_steering_node.py  # ★ 阿克曼转角计算
 ├── firmware/                        # ESP32 固件（待开发）
-├── software/                        # 上层软件（ROS2 / AI）
-└── docs/                            # 文档
+├── docs/                            # 文档
+└── README.md
 ```
 
 ---
