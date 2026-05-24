@@ -147,7 +147,7 @@ table.specs .tag {
 .stat-card .number { font-size: 1.75rem; font-weight: 800; color: var(--accent); }
 .stat-card .label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
 
-/* Project structure */
+/* Structure */
 .structure {
   background: var(--card-bg); border: 1px solid var(--border);
   border-radius: 12px; padding: 24px 32px;
@@ -156,6 +156,21 @@ table.specs .tag {
 .structure .dir { color: var(--accent); }
 .structure .file { color: var(--text-secondary); }
 .structure .comment { color: var(--text-muted); font-style: italic; }
+
+/* 3D Viewer */
+.viewer-container {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; position: relative;
+}
+.viewer-container iframe {
+  width: 100%; height: 500px; border: none; display: block;
+}
+.viewer-badge {
+  position: absolute; bottom: 12px; right: 12px;
+  background: rgba(0,0,0,0.7); color: var(--text-secondary);
+  padding: 4px 12px; border-radius: 6px; font-size: 0.75rem;
+  pointer-events: none;
+}
 
 /* Links */
 .link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -272,6 +287,17 @@ footer a:hover { color: var(--accent); }
 <span class="comment">│</span>  <span class="layer-actuator">JGA25-371 · RPLIDAR · Realsense · MPU6050</span>  <span class="comment">│</span><br>
 <span class="comment">└─────────────────────────────────────────────┘</span>
   </div>
+</section>
+
+<section>
+  <h2 class="section-title">🤖 3D 模型预览</h2>
+  <div class="viewer-container">
+    <iframe src="https://gadget.artivis.xyz/urdf-viewer?url=https://raw.githubusercontent.com/zhangshuaiqing/robot/main/software/genbot_description/urdf/genbot.urdf&ignore=gazebo" allow="fullscreen"></iframe>
+    <span class="viewer-badge">鼠标拖拽旋转 · 滚轮缩放</span>
+  </div>
+  <p style="color:var(--text-secondary);font-size:0.8rem;margin-top:8px;">
+    💡 也可以在 GitHub 中直接 <a href="https://github.com/zhangshuaiqing/robot/blob/main/software/genbot_description/urdf/genbot.urdf" target="_blank" style="color:var(--accent)">查看 URDF 文件</a>，GitHub 会自动渲染 3D 模型。
+  </p>
 </section>
 
 <section id="specs">

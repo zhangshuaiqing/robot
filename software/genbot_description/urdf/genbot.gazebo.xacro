@@ -93,7 +93,7 @@
             name="gz::sim::systems::JointPositionController">
       <joint_name>front_left_steering_joint</joint_name>
       <topic>/cmd_steer_left</topic>
-      <use_cmd_composition>true</use_cmd_composition>
+      <use_cmd_composition>false</use_cmd_composition>
       <publish_cmd>true</publish_cmd>
       <publish_state>true</publish_state>
       <publish_pose>true</publish_pose>
@@ -106,7 +106,7 @@
             name="gz::sim::systems::JointPositionController">
       <joint_name>front_right_steering_joint</joint_name>
       <topic>/cmd_steer_right</topic>
-      <use_cmd_composition>true</use_cmd_composition>
+      <use_cmd_composition>false</use_cmd_composition>
       <publish_cmd>true</publish_cmd>
       <publish_state>true</publish_state>
       <publish_pose>true</publish_pose>

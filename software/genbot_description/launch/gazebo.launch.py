@@ -81,6 +81,7 @@ def generate_launch_description():
         arguments=[
             # 后轮差速驱动 → ROS2
             '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
+            # 后轮差速驱动（ROS → Gazebo，避免桥接回环）
             '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
             # LiDAR → ROS2
             '/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',

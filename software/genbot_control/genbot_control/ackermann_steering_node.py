@@ -43,33 +43,49 @@ class AckermannSteeringNode(Node):
         v = msg.linear.x
         omega = msg.angular.z
 
-        # 方向盘转角（弧度）
+        # 阿克曼转向：速度为0时不能转向，但需要处理 teleop 的纯旋转命令
+        # 此时用一个最小速度来产生转向
         if abs(v) < 0.01:
-            # 原地不行，忽略转向
-            steer_left = Float64()
-            steer_right = Float64()
-            steer_left.data = 0.0
-            steer_right.data = 0.0
-            self.steer_left_pub.publish(steer_left)
-            self.steer_right_pub.publish(steer_right)
-            return
+            if abs(omega) > 0.01:
+                # 纯旋转命令：用小速度配合转角来实现
+                v = 0.1 * (1.0 if omega > 0 else -1.0)
+            else:
+                # 完全停止
+                steer_left = Float64()
+                steer_right = Float64()
+                steer_left.data = 0.0
+                steer_right.data = 0.0
+                self.steer_left_pub.publish(steer_left)
+                self.steer_right_pub.publish(steer_right)
+                return
 
         # 转弯半径 R = v / omega
         R = v / omega if abs(omega) > 0.001 else float('inf')
 
-        # 中心转向角
+        # 中心转向角（带符号，正=左转，负=右转）
         if math.isfinite(R):
-            steering_angle = math.atan2(self.wheel_base, R)
+            steering_angle = math.atan(self.wheel_base / abs(R))
+            steering_angle = math.copysign(steering_angle, omega)  # 符号跟随omega
         else:
             steering_angle = 0.0
 
         steering_angle = max(-self.max_steer, min(self.max_steer, steering_angle))
 
         # 阿克曼几何：左右轮转角不同
+        # 注意：左转时 steering_angle > 0，右转时 < 0
         if abs(steering_angle) > 0.001:
-            R_turn = self.wheel_base / math.tan(steering_angle)
-            left_angle = math.atan2(self.wheel_base, R_turn + self.wheel_track / 2.0)
-            right_angle = math.atan2(self.wheel_base, R_turn - self.wheel_track / 2.0)
+            abs_angle = abs(steering_angle)
+            R_turn = self.wheel_base / math.tan(abs_angle)
+            inner_angle = math.atan2(self.wheel_base, R_turn - self.wheel_track / 2.0)
+            outer_angle = math.atan2(self.wheel_base, R_turn + self.wheel_track / 2.0)
+            if steering_angle > 0:
+                # 左转：左轮是内轮（转角大），右轮是外轮（转角小）
+                left_angle = inner_angle
+                right_angle = outer_angle
+            else:
+                # 右转：右轮是内轮（转角大），左轮是外轮（转角小）
+                left_angle = -outer_angle
+                right_angle = -inner_angle
         else:
             left_angle = 0.0
             right_angle = 0.0
@@ -82,7 +98,7 @@ class AckermannSteeringNode(Node):
         self.steer_left_pub.publish(steer_left)
         self.steer_right_pub.publish(steer_right)
 
-        self.get_logger().debug(
+        self.get_logger().info(
             f'v={v:.2f} ω={omega:.2f} → steer_L={left_angle:.3f} steer_R={right_angle:.3f}',
             throttle_duration_sec=0.5
         )
