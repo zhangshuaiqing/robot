@@ -83,12 +83,12 @@ ros2 run xacro xacro software/genbot_description/urdf/genbot.urdf.xacro | head -
 
 ## 四、项目编译
 
-每次新开终端都需要：
+每次新开终端都需要（把 `<项目路径>` 换成你 clone 的位置）：
 
 ```bash
-cd /media/zsq-508/data/project/robot
+cd <项目路径>/robot
 source /opt/ros/humble/setup.bash   # 加载ROS2环境
-colcon build --packages-select genbot_description  # 编译
+colcon build --packages-select genbot_description genbot_control  # 编译
 source install/setup.bash           # 加载项目包
 ```
 
@@ -96,20 +96,20 @@ source install/setup.bash           # 加载项目包
 
 ```bash
 echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
-echo 'source /media/zsq-508/data/project/robot/install/setup.bash' >> ~/.bashrc
+echo 'source <项目路径>/robot/install/setup.bash' >> ~/.bashrc
 source ~/.bashrc
 ```
 
 ### 4.1 首次编译
 
 ```bash
-cd /media/zsq-508/data/project/robot
+cd <项目路径>/robot
 colcon build --packages-select genbot_description
 ```
 ### 4.2 更新后重新编译
 
 ```bash
-cd /media/zsq-508/data/project/robot
+cd <项目路径>/robot
 colcon build --packages-select genbot_description genbot_control
 source install/setup.bash
 ```
@@ -122,7 +122,7 @@ source install/setup.bash
 
 ```bash
 # 终端1
-cd /media/zsq-508/data/project/robot
+cd <项目路径>/robot
 source install/setup.bash
 ros2 launch genbot_description display.launch.py
 
@@ -135,7 +135,7 @@ ros2 launch genbot_description display.launch.py
 机器人模型 + 传感器 + 阿克曼转向控制 全部启动：
 
 ```bash
-cd /media/zsq-508/data/project/robot
+cd <项目路径>/robot
 source install/setup.bash
 ros2 launch genbot_description gazebo.launch.py
 ```
@@ -150,7 +150,7 @@ ros2 launch genbot_description gazebo.launch.py
 
 ```bash
 # 在Gazebo运行时，另开一个终端：
-cd /media/zsq-508/data/project/robot
+cd <项目路径>/robot
 source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```

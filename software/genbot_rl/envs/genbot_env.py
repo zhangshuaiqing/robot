@@ -4,6 +4,7 @@ GenBot MuJoCo RL 导航环境（Gymnasium 接口）
 阿克曼转向底盘，PPO/SAC 训练自主导航。
 """
 
+import os
 import math
 import numpy as np
 import gymnasium as gym
@@ -46,10 +47,11 @@ class GenBotNavEnv(gym.Env):
         self.max_speed = 5.0        # 后轮最大角速度 (rad/s)
         self.wheel_radius = 0.05
 
-        # 加载 MuJoCo 模型
-        self.model = mujoco.MjModel.from_xml_path(
-            "/media/zsq-508/data/project/robot/software/genbot_rl/xml/genbot_ackermann.xml"
+        # 加载 MuJoCo 模型（相对路径，相对于本文件位置）
+        xml_path = os.path.join(
+            os.path.dirname(__file__), "..", "xml", "genbot_ackermann.xml"
         )
+        self.model = mujoco.MjModel.from_xml_path(xml_path)
         self.data = mujoco.MjData(self.model)
 
         # 观察空间: LiDAR(16) + 目标相对位置(2) + 目标距离(1) + 速度(1) = 20维

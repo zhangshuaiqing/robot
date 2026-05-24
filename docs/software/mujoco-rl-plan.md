@@ -22,7 +22,7 @@ MuJoCo XML 模型                  Gymnasium 环境                SB3 训练
 ### 2.1 安装依赖
 
 ```bash
-cd /media/zsq-508/data/project/robot/software/genbot_rl
+cd <项目路径>/robot/software/genbot_rl
 uv sync
 ```
 
@@ -36,7 +36,7 @@ uv sync
 如果 uv sync 超时，可以分步安装：
 
 ```bash
-cd /media/zsq-508/data/project/robot/software/genbot_rl
+cd <项目路径>/robot/software/genbot_rl
 uv pip install mujoco
 uv pip install gymnasium
 uv pip install stable-baselines3
@@ -46,7 +46,7 @@ uv pip install matplotlib
 验证安装：
 
 ```bash
-cd /media/zsq-508/data/project/robot/software/genbot_rl
+cd <项目路径>/robot/software/genbot_rl
 uv run python -c "import mujoco; print('MuJoCo', mujoco.__version__)"
 uv run python -c "import gymnasium; print('Gymnasium', gymnasium.__version__)"
 uv run python -c "from stable_baselines3 import PPO; print('SB3 OK')"
@@ -179,7 +179,7 @@ model.save("models/nav_policy")
 ### 训练
 
 ```bash
-cd /media/zsq-508/data/project/robot/software/genbot_rl
+cd <项目路径>/robot/software/genbot_rl
 uv run python scripts/train.py
 ```
 
