@@ -10,6 +10,13 @@ body {
   background: #0d1117; color: #e6edf3;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow: hidden;
+  height: 100vh;
+}
+model-viewer {
+  width: 100%; height: 100vh;
+  --poster-color: transparent;
+  --progress-bar-color: #58a6ff;
+  --progress-ring-color: #30363d;
 }
 #info {
   position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
@@ -23,7 +30,7 @@ body {
 #loading {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   color: #8b949e; font-size: 1rem; z-index: 5;
-  text-align: center;
+  text-align: center; pointer-events: none;
 }
 #loading .spinner {
   width: 32px; height: 32px; margin: 0 auto 12px;
@@ -39,126 +46,46 @@ body {
   font-size: 0.75rem; color: #484f58;
   pointer-events: none;
 }
-canvas { display: block; }
 </style>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </head>
 <body>
 
 <div id="loading">
   <div class="spinner"></div>
-  <span>加载 URDF 模型...</span>
+  <span>加载 3D 模型...</span>
 </div>
 
 <div id="info">🤖 <strong>GenBot</strong> — 阿克曼转向底盘 · 拖拽旋转 / 滚轮缩放</div>
-<div id="controls-hint">鼠标拖拽旋转 · 滚轮缩放 · 右键平移</div>
+<div id="controls-hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移</div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-    "urdf-loader": "https://unpkg.com/urdf-loader@0.6.7/dist/urdf-loader.esm.js"
-  }
-}
-</script>
+<model-viewer
+  id="genbot-viewer"
+  alt="GenBot 4轮阿克曼机器人"
+  src="genbot.glb"
+  ar
+  ar-modes="webxr scene-viewer quick-look"
+  camera-controls
+  camera-orbit="45deg 55deg 1.8m"
+  min-camera-orbit="auto auto 0.5m"
+  max-camera-orbit="auto auto 5m"
+  shadow-intensity="0.5"
+  exposure="1.2"
+  tone-mapping="aces"
+  auto-rotate
+  rotation-per-second="3deg"
+  interaction-prompt="none">
+</model-viewer>
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { URDFLoader } from 'urdf-loader';
-
-const loader = new URDFLoader();
-
-// 使用 GitHub raw 链接加载 URDF
-const urdfUrl = 'https://raw.githubusercontent.com/zhangshuaiqing/robot/main/software/genbot_description/urdf/genbot.urdf';
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0d1117);
-
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(1.2, 0.8, 1.2);
-camera.lookAt(0, 0, 0);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-document.body.appendChild(renderer.domElement);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0.05, 0);
-controls.enableDamping = true;
-controls.dampingFactor = 0.1;
-controls.minDistance = 0.3;
-controls.maxDistance = 5;
-controls.update();
-
-// 灯光
-const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
-scene.add(ambientLight);
-
-const hemiLight = new THREE.HemisphereLight(0x8888ff, 0x444422, 0.8);
-scene.add(hemiLight);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
-dirLight.position.set(2, 3, 4);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 1024;
-dirLight.shadow.mapSize.height = 1024;
-scene.add(dirLight);
-
-const fillLight = new THREE.DirectionalLight(0x4488ff, 0.5);
-fillLight.position.set(-1, 0.5, -1);
-scene.add(fillLight);
-
-// 地面网格
-const gridHelper = new THREE.GridHelper(2, 20, 0x30363d, 0x21262d);
-scene.add(gridHelper);
-
-// 加载 URDF
-loader.load(urdfUrl, (robot) => {
-  robot.position.set(0, 0.05, 0);
-  robot.scale.set(1, 1, 1);
-  scene.add(robot);
-
-  // 关节动画？让轮子转一下有动感效果
-  let time = 0;
-  function animate() {
-    requestAnimationFrame(animate);
-    time += 0.01;
-    // 缓慢旋转前轮转向关节展示阿克曼效果
-    // 注意：关节名需要匹配URDF中的名称
-    try {
-      if (robot.joints['front_left_steering_joint']) {
-        robot.joints['front_left_steering_joint'].angle = Math.sin(time) * 0.3;
-      }
-      if (robot.joints['front_right_steering_joint']) {
-        robot.joints['front_right_steering_joint'].angle = Math.sin(time + 0.5) * 0.25;
-      }
-      if (robot.joints['rear_left_wheel_joint']) {
-        robot.joints['rear_left_wheel_joint'].angle = time * 2;
-      }
-      if (robot.joints['rear_right_wheel_joint']) {
-        robot.joints['rear_right_wheel_joint'].angle = time * 2;
-      }
-    } catch(e) { /* 关节名可能不匹配，忽略 */ }
-
-    controls.update();
-    renderer.render(scene, camera);
-  }
-
-  document.getElementById('loading').style.display = 'none';
-  animate();
-});
-
-// 响应式
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const viewer = document.getElementById('genbot-viewer');
+  viewer.addEventListener('load', () => {
+    document.getElementById('loading').style.display = 'none';
+  });
+  viewer.addEventListener('error', (e) => {
+    document.getElementById('loading').innerHTML = '模型加载失败，请刷新重试';
+  });
 });
 </script>
 </body>
