@@ -9,33 +9,21 @@
 
     <plugin filename="libgz-sim-physics-system.so"
             name="gz::sim::systems::Physics"/>
+    <plugin filename="libgz-sim-user-commands-system.so"
+            name="gz::sim::systems::UserCommands"/>
+    <plugin filename="libgz-sim-scene-broadcaster-system.so"
+            name="gz::sim::systems::SceneBroadcaster"/>
 
+    <!-- 使用本地 ground_plane（gz-sim自带） -->
     <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
     </include>
 
-    <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground_Plane</uri>
-    </include>
-
-    <!-- 简单障碍物 -->
-    <include>
-      <name>obstacle1</name>
-      <pose>1.5 1.0 0.5 0 0 0</pose>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Box</uri>
-    </include>
-
-    <include>
-      <name>obstacle2</name>
-      <pose>2.0 -1.0 0.5 0 0 0</pose>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Box</uri>
-    </include>
-
-    <!-- 环境光 -->
+    <!-- 阳光 -->
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
       <pose>0 0 10 0 0 0</pose>
-      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
         <range>20</range>

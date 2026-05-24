@@ -10,9 +10,9 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
-                            ExecuteProcess)
+                            ExecuteProcess, SetLaunchConfiguration)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, Command
+from launch.substitutions import LaunchConfiguration, Command, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
@@ -27,15 +27,17 @@ def generate_launch_description():
 
     robot_desc = Command(['xacro ', urdf_path])
 
-    # 1. 启动 gz-sim (Gazebo Harmonic)
-    # gz-sim 的 ros_gz_sim launch 文件
+    # 1. 先拼接gz_args
+    gz_args = [TextSubstitution(text='-r -v 4 '), world]
+
+    # 2. 启动 gz-sim (Gazebo Harmonic)
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             os.path.join(get_package_share_directory('ros_gz_sim'),
                          'launch', 'gz_sim.launch.py')
         ]),
         launch_arguments={
-            'gz_args': [' -r -v 4 ', world],
+            'gz_args': gz_args,
             'on_exit_shutdown': 'true',
         }.items()
     )
