@@ -55,8 +55,9 @@ canvas { display: block; }
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "urdf-loader": "https://unpkg.com/urdf-loader@0.6.7/dist/urdf-loader.esm.js"
   }
 }
 </script>
@@ -64,7 +65,7 @@ canvas { display: block; }
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { URDFLoader } from 'https://cdn.jsdelivr.net/npm/urdf-loader@0.6.7/dist/urdf-loader.esm.js';
+import { URDFLoader } from 'urdf-loader';
 
 const loader = new URDFLoader();
 
