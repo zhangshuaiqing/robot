@@ -8,8 +8,13 @@ GenBot MuJoCo RL 训练脚本
 """
 
 import os
+import warnings
 import sys
 import argparse
+
+# 屏蔽CUDA警告（驱动未配置时用CPU）
+warnings.filterwarnings("ignore", "CUDA initialization")
+warnings.filterwarnings("ignore", "Trying to log data to tensorboard")
 import numpy as np
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import (
@@ -84,7 +89,7 @@ def train(args):
                 net_arch=dict(pi=[256, 256], vf=[256, 256]),
             ),
             verbose=1,
-            tensorboard_log=os.path.join(save_dir, "tensorboard"),
+            tensorboard_log=None,
             seed=args.seed,
         )
     elif args.algo == "sac":
@@ -100,7 +105,7 @@ def train(args):
                 net_arch=dict(pi=[256, 256], qf=[256, 256]),
             ),
             verbose=1,
-            tensorboard_log=os.path.join(save_dir, "tensorboard"),
+            tensorboard_log=None,
             seed=args.seed,
         )
     else:
