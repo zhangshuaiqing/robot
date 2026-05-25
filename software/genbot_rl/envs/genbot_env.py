@@ -89,8 +89,8 @@ class GenBotNavEnv(gym.Env):
 
             dist = mujoco.mj_ray(
                 self.model, self.data, origin, direction,
-                None, 1, -1
-            )[0]
+                np.ones(6, dtype=np.uint8), 1, -1, None, None
+            )
             lidar[i] = np.clip(dist if dist > 0 else 3.0, 0.0, 3.0)
 
         # 获取机器人位置和朝向
