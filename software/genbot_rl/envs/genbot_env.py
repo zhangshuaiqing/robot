@@ -75,12 +75,23 @@ class GenBotNavEnv(gym.Env):
 
     def _get_obs(self):
         """获取观察值"""
-        # LiDAR 读数（16束）传感器返回-1表示检测不到
-        lidar = np.array([self.data.sensor(f"lidar_{i}").data[0] for i in range(16)])
-        lidar = np.clip(lidar, 0.0, 3.0)
-        lidar = np.nan_to_num(lidar, nan=3.0, posinf=3.0, neginf=0.0)
-        # 若传感器返回负值（无检测），设为大值
-        lidar[lidar < 0.01] = 3.0
+        # LiDAR：用 MuJoCo mj_ray 手动做 16 束射线检测
+        lidar = np.zeros(16, dtype=np.float32)
+        chassis_pos = self.data.body("chassis").xpos
+        chassis_mat = self.data.body("chassis").xmat.reshape(3, 3)
+        origin = chassis_pos + chassis_mat @ np.array([0, 0, 0.05])
+
+        for i in range(16):
+            angle = 2 * math.pi * i / 16
+            # 水平方向射线
+            direction = chassis_mat @ np.array([math.cos(angle), math.sin(angle), 0])
+            direction = direction / np.linalg.norm(direction)
+
+            dist = mujoco.mj_ray(
+                self.model, self.data, origin, direction,
+                None, 1, -1
+            )[0]
+            lidar[i] = np.clip(dist if dist > 0 else 3.0, 0.0, 3.0)
 
         # 获取机器人位置和朝向
         chassis_pos = self.data.body("chassis").xpos[:2]
@@ -99,9 +110,10 @@ class GenBotNavEnv(gym.Env):
         local_dy = -dx * sin_yaw + dy * cos_yaw
         target_dist = math.sqrt(dx**2 + dy**2)
 
-        # 速度
-        velocity = self.data.sensor("velocity").data.copy()
-        speed = math.sqrt(velocity[0]**2 + velocity[1]**2)
+        # 速度（由 qvel 计算，linear velocity from freejoint）
+        speed = math.sqrt(
+            self.data.qvel[0]**2 + self.data.qvel[1]**2
+        )
 
         obs = np.concatenate([
             lidar.astype(np.float32),        # 16
