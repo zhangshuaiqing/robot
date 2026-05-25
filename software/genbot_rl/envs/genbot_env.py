@@ -75,11 +75,12 @@ class GenBotNavEnv(gym.Env):
 
     def _get_obs(self):
         """获取观察值"""
-        # LiDAR 读数（16束，范围限制在0.15~3.0m）
-        lidar = self.data.sensor("lidar").data.copy()
+        # LiDAR 读数（16束）传感器返回-1表示检测不到
+        lidar = np.array([self.data.sensor(f"lidar_{i}").data[0] for i in range(16)])
         lidar = np.clip(lidar, 0.0, 3.0)
-        # 无效值处理
         lidar = np.nan_to_num(lidar, nan=3.0, posinf=3.0, neginf=0.0)
+        # 若传感器返回负值（无检测），设为大值
+        lidar[lidar < 0.01] = 3.0
 
         # 获取机器人位置和朝向
         chassis_pos = self.data.body("chassis").xpos[:2]
@@ -110,10 +111,9 @@ class GenBotNavEnv(gym.Env):
         ])
         return obs
 
-    def _get_reward(self, obs, collision):
+    def _get_reward(self, obs, collision, lidar_min):
         """计算奖励"""
         target_dist = obs[18]
-        lidar = obs[:16]
 
         reward = 0.0
 
@@ -128,12 +128,13 @@ class GenBotNavEnv(gym.Env):
             reward += delta * 5.0
         self._prev_dist = target_dist
 
-        # 3. 碰撞/近障碍惩罚
-        if collision or np.min(lidar) < 0.15:
+        # 3. 碰撞惩罚（基于物理接触，非lidar）
+        if collision:
             reward -= 50.0
             return reward, True, False
 
-        if np.min(lidar) < 0.3:
+        # 近障碍警告（基于lidar，但需要lidar可信）
+        if lidar_min > 0.01 and lidar_min < 0.3:
             reward -= 0.5
 
         # 4. 每步微小惩罚
@@ -213,7 +214,8 @@ class GenBotNavEnv(gym.Env):
                 break
 
         obs = self._get_obs()
-        reward, terminated, truncated = self._get_reward(obs, collision)
+        lidar_min = np.min(obs[:16])
+        reward, terminated, truncated = self._get_reward(obs, collision, lidar_min)
 
         # 超时截断
         if self.step_count >= self.max_steps:
