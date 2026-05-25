@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""MuJoCo 中检查轮子旋转方向"""
+"""在 MuJoCo viewer 中查看 GenBot 阿克曼底盘（10秒）"""
 
 import mujoco
 import mujoco.viewer
-import math
 import time
+import math
 import sys
 
 model = mujoco.MjModel.from_xml_path(
@@ -12,18 +12,12 @@ model = mujoco.MjModel.from_xml_path(
 )
 data = mujoco.MjData(model)
 
-print("joint 列表:")
-for i in range(model.njnt):
-    jnt = model.joint(i)
-    print(f"  [{i}] {jnt.name}  axis=({jnt.axis[0]:.2f},{jnt.axis[1]:.2f},{jnt.axis[2]:.2f})")
-sys.stdout.flush()
-
-print("actuator 列表:")
+print(f"模型: {model.nu} actuators, {model.nbody} bodies")
 for i in range(model.nu):
-    print(f"  [{i}] {model.actuator(i).name}")
+    print(f"  actuator[{i}]: {model.actuator(i).name}")
 sys.stdout.flush()
 
-print("\n🔄 窗口已打开，观察5秒...")
+print("🔄 窗口打开10秒，观察前进+转向")
 sys.stdout.flush()
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
@@ -32,25 +26,20 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
     viewer.cam.elevation = -30
 
     start = time.time()
-    step = 0
-    while viewer.is_running() and time.time() - start < 5:
-        # 后轮驱动
-        data.ctrl[0] = 3.0
-        data.ctrl[1] = 3.0
-        data.ctrl[2] = 0.0
-        data.ctrl[3] = 0.0
+    while viewer.is_running() and time.time() - start < 10:
+        t = time.time() - start
 
-        if step % 50 == 0:
-            pos = data.body("chassis").xpos
-            fl = data.joint("front_left_wheel").qpos[0]
-            rl = data.joint("rear_left_wheel").qpos[0]
-            print(f"  pos=({pos[0]:.3f},{pos[1]:.3f})  fl_wheel={fl:.2f}  rl_wheel={rl:.2f}")
-            sys.stdout.flush()
+        # 后轮驱动（前进）
+        data.ctrl[0] = 3.0   # left_motor
+        data.ctrl[1] = 3.0   # right_motor
+
+        # 前轮阿克曼转向（左右摆动）
+        steer = 0.3 * math.sin(t * 1.5)
+        data.ctrl[2] = steer * 1.2   # fl_steer_act（内轮，转角大）
+        data.ctrl[3] = steer * 0.8   # fr_steer_act（外轮，转角小）
 
         mujoco.mj_step(model, data)
         viewer.sync()
-        step += 1
         time.sleep(0.01)
 
 print("✅ 结束")
-sys.stdout.flush()
