@@ -78,24 +78,24 @@
         <geom name="rr_wheel_geom" type="cylinder" size="0.050 0.0175" mass="0.3" material="wheel"/>
       </body>
 
-    <!-- LiDAR site 阵列：16个方向 -->
-    <site name="lidar_0" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_1" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_2" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_3" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_4" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_5" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_6" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_7" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_8" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_9" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_10" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_11" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_12" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_13" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_14" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-    <site name="lidar_15" pos="0 0 0.050" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
-  </body>
+      <!-- LiDAR site 阵列：16个方向，绕Z轴360度 -->
+      <site name="lidar_0" pos="0 0 0.050" euler="0 1.5708 0" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_1" pos="0 0 0.050" euler="0 1.5708 0.392699" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_2" pos="0 0 0.050" euler="0 1.5708 0.785398" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_3" pos="0 0 0.050" euler="0 1.5708 1.1781" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_4" pos="0 0 0.050" euler="0 1.5708 1.5708" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_5" pos="0 0 0.050" euler="0 1.5708 1.9635" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_6" pos="0 0 0.050" euler="0 1.5708 2.35619" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_7" pos="0 0 0.050" euler="0 1.5708 2.74889" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_8" pos="0 0 0.050" euler="0 1.5708 3.14159" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_9" pos="0 0 0.050" euler="0 1.5708 3.53429" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_10" pos="0 0 0.050" euler="0 1.5708 3.92699" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_11" pos="0 0 0.050" euler="0 1.5708 4.31969" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_12" pos="0 0 0.050" euler="0 1.5708 4.71239" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_13" pos="0 0 0.050" euler="0 1.5708 5.10509" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_14" pos="0 0 0.050" euler="0 1.5708 5.49779" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+      <site name="lidar_15" pos="0 0 0.050" euler="0 1.5708 5.89049" size="0.005 0.005 0.005" rgba="0 0 1 0"/>
+    </body>
 
     <!-- ==================== 目标点 ==================== -->
     <body name="target" pos="2.0 0 0.01">
